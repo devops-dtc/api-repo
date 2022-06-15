@@ -5,15 +5,15 @@ var cors = require('cors');
 const multer = require('multer');
 var bodyParser = require('body-parser');
 
+const mysql = require('mysql');
+const pool = mysql.createConnection({
+ host: "localhost",
+ user: "root",
+ password: "",
+ database: "educationdb",
+});
 
-const Pool = require('pg').Pool
-const pool = new Pool({
-    user:'postgres',
-    host:'localhost',
-    database:'EducationDB',
-    password:'postgres',
-    port:5432
-})
+pool.connect();
 
 const port = 8081;
 
@@ -66,7 +66,6 @@ var server = app.listen(port, function () {
 
 
 app.post('/user/login',(req,res) => {    
-    console.log("login call")
     username =  req.body.username;
     password =  req.body.password;
     let query = "select * from users where (email='"+username+ "' OR username='" + username + "' OR mobile='"+ username +"') AND password = '"+password+"'";   
@@ -74,8 +73,8 @@ app.post('/user/login',(req,res) => {
         if(error){
             throw error
         }
-        if(result.rows.length > 0){           
-            res.status(200).json({accessToken:'123572-GIRESH-GQWYPR-AZCSEYK', userdetail:result.rows})
+        if(result.length > 0){           
+            res.status(200).json({accessToken:'123572-GIRESH-GQWYPR-AZCSEYK', userdetail:result})
         } else {
             res.status(403).json({error:'username/password do not match'})
         }
@@ -105,7 +104,7 @@ app.get('/getUsers', (req,res) => {
         if(error){
             throw error
         }
-        res.status(200).json(result.rows)
+        res.status(200).json(result)
     })
 })  
 
@@ -118,16 +117,15 @@ app.post('/user/detail', (req,res) => {
         if(error){
             throw error
         }
-        //console.log(result.rows)
-        res.status(200).json(result.rows)
+        res.status(200).json(result)
     })
 }) 
 
-app.get('/getSubjects',(request,res) =>{
-    pool.query("SELECT * FROM subjects ORDER BY subject_id ASC", (error,results) =>{
-        if(error){
-            throw error
-        }
-        res.status(200).json(results.rows)
-    })
-})
+
+
+app.get('/getSubjects', (request,res) => {
+    pool.query('SELECT * FROM subjects ORDER BY subject_id ASC', function (error, results) {
+    if (error) throw error;
+    res.status(200).json(results)
+    });
+});
